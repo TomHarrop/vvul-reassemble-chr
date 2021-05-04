@@ -3,10 +3,17 @@
 import pandas
 
 
-def read_regions(wildcards):
+def rr_input(wildcards):
     fai = checkpoints.fa_index.get(**wildcards).output['fai']
     r = sorted(set(pandas.read_csv(fai, sep='\t', header=None)[0]))
     return expand('output/030_bam-chunks/chunk_{region}.txt',
+                  region=r)
+
+
+def rr_output(wildcards):
+    fai = checkpoints.fa_index.get(**wildcards).output['fai']
+    r = sorted(set(pandas.read_csv(fai, sep='\t', header=None)[0]))
+    return expand('output/040_read-chunks/{region}.fq',
                   region=r)
 
 
@@ -18,11 +25,27 @@ reads = 'data/vvul.fq.gz'
 pigz = 'shub://TomHarrop/singularity-containers:pigz_2.4.0'
 bwa = 'shub://TomHarrop/singularity-containers:bwa_0.7.17'
 samtools = 'shub://TomHarrop/align-utils:samtools_1.10'
+biopython = 'shub://TomHarrop/py-containers:biopython_1.78'
 
 
 rule target:
     input:
-        read_regions
+        'a_file'
+
+rule retrieve_reads:
+    input:
+        read_ids = rr_input,
+        fastq = 'output/000_tmp/pe_reads.fq'
+    output:
+        'a_file'
+    params:
+        outdir = 'output/040_read-chunks',
+    log:
+        'output/logs/retrieve_reads.log'
+    container:
+        biopython
+    script:
+        'src/retrieve_reads.py'
 
 # get the list of read ids for each chunk
 rule extract_read_ids:
@@ -46,7 +69,7 @@ rule extract_read_ids:
 # subset the BAM by the chunk list
 rule chunk_bam:
     input:
-        bam = 'output/020_alignment/aln.sort.bam',
+        bam = 'output/020_alignment/aln.bam',
         bai = 'output/020_alignment/aln.bam.bai'
     output:
         temp('output/030_bam-chunks/chunk_{region}.sam')
@@ -192,7 +215,7 @@ rule tmp_unzip_short:
     input:
         reads
     output:
-        temp('output/000_tmp/pe_reads.fq')
+        'output/000_tmp/pe_reads.fq'
     threads:
         3
     container:
