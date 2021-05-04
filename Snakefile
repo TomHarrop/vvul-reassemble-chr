@@ -30,14 +30,14 @@ biopython = 'shub://TomHarrop/py-containers:biopython_1.78'
 
 rule target:
     input:
-        'a_file'
+        'output/040_read-chunks/a_file'
 
 rule retrieve_reads:
     input:
         read_ids = rr_input,
         fastq = 'output/000_tmp/pe_reads.fq'
     output:
-        'a_file'
+        'output/040_read-chunks/a_file'
     params:
         outdir = 'output/040_read-chunks',
     log:
