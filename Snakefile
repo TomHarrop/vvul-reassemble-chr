@@ -95,7 +95,10 @@ rule target:
 rule assembly_qc:
     input:
         # 'output/060_stat-plots/busco_results.pdf',
-        'output/070_stat-plots/assembly_stats.pdf'
+        'output/070_stat-plots/assembly_stats.pdf',
+        expand('output/070_stat-plots/{region}_{plot}.pdf',
+               region=all_regions,
+               plot=['kha', 'coverage'])
 
 rule plot_assembly_stats:
     input:
@@ -104,7 +107,7 @@ rule plot_assembly_stats:
         plot = 'output/070_stat-plots/assembly_stats.pdf'
     log:
         'output/logs/plot_assembly_stats.log'
-    singularity:
+    container:
         r
     script:
         'src/plot_assembly_stats.R'
@@ -178,6 +181,67 @@ rule write_meraculous_config:
         biopython
     script:
         'src/write_meraculous_config.py'
+
+
+# look at kmer plots for each read set (should be the same)
+rule plot_kha:
+    input:
+        hist = 'output/060_stats/{region}_hist.txt',
+        hist_out = 'output/060_stats/{region}_hist-out.txt',
+    output:
+        plot = 'output/070_stat-plots/{region}_kha.pdf'
+    log:
+        'output/logs/plot_kha.{region}.log'
+    container:
+        r
+    script:
+        'src/plot_kha.R'
+
+rule plot_kmer_coverage:
+    input:
+        hist = 'output/060_stats/{region}_hist.txt',
+        hist_out = 'output/060_stats/{region}_hist-out.txt',
+        peaks = 'output/060_stats/{region}_peaks.txt'
+    output:
+        plot = 'output/070_stat-plots/{region}_coverage.pdf'
+    log:
+        'output/logs/plot_kmer_coverage.{region}.log'
+    container:
+        r
+    script:
+        'src/plot_kmer_coverage.R'
+
+rule norm:
+    input:
+        fq = 'output/040_read-chunks/chunk_{region}.fq',
+    output:
+        # fq_norm = 'output/060_stats/{region}.fq.gz',
+        # fq_toss = 'output/060_stats/{region}_toss.fq.gz',
+        hist = 'output/060_stats/{region}_hist.txt',
+        hist_out = 'output/060_stats/{region}_hist-out.txt',
+        peaks = 'output/060_stats/{region}_peaks.txt'
+    log:
+        'output/logs/norm.{region}.log'
+    params:
+        target = 60,
+        min = 5
+    threads:
+        max_threads - 4
+    container:
+        bbmap
+    shell:
+        'bbnorm.sh '
+        'in={input.fq} '
+        'threads={threads} '
+        'out=/dev/null.fastq '
+        # 'outt={output.fq_toss} '
+        'hist={output.hist} '
+        'histout={output.hist_out} '
+        'target={params.target} '
+        'min={params.min} '
+        'peaks={output.peaks} '
+        '2> {log} '
+
 
 rule retrieve_reads:
     input:
@@ -364,7 +428,7 @@ rule tmp_unzip_short:
     input:
         reads
     output:
-        'output/000_tmp/pe_reads.fq'
+        temp('output/000_tmp/pe_reads.fq')
     threads:
         3
     container:
