@@ -95,7 +95,7 @@ gp <- ggplot(pd, aes(x = as.factor(k),
 
 # write output
 wo <- grid::convertUnit(grid::unit(483, "pt"), "mm", valueOnly = TRUE)
-ho <- grid::convertUnit(grid::unit(664/3, "pt"), "mm", valueOnly = TRUE)
+ho <- grid::convertUnit(grid::unit(664, "pt"), "mm", valueOnly = TRUE)
 ggsave(filename = plot_file,
        plot = gp,
        device = cairo_pdf,

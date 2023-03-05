@@ -80,7 +80,7 @@ rule target:
         expand(('output/050_meraculous/'
                 '{region}_k{k}_diplo{diplo}/'
                 'meraculous_final_results/final.scaffolds.fa'),
-               region=['CM025407.1'],
+               region=['CM025407.1', 'CM025386.1'],
                k=[31, 51, 71],
                diplo=[0, 1])
 
@@ -187,7 +187,7 @@ rule write_meraculous_config:
 rule plot_kha:
     input:
         hist = 'output/060_stats/{region}_hist.txt',
-        hist_out = 'output/060_stats/{region}_hist-out.txt',
+        # hist_out = 'output/060_stats/{region}_hist-out.txt',
     output:
         plot = 'output/070_stat-plots/{region}_kha.pdf'
     log:
@@ -200,7 +200,7 @@ rule plot_kha:
 rule plot_kmer_coverage:
     input:
         hist = 'output/060_stats/{region}_hist.txt',
-        hist_out = 'output/060_stats/{region}_hist-out.txt',
+        # hist_out = 'output/060_stats/{region}_hist-out.txt',
         peaks = 'output/060_stats/{region}_peaks.txt'
     output:
         plot = 'output/070_stat-plots/{region}_coverage.pdf'
@@ -218,7 +218,7 @@ rule norm:
         # fq_norm = 'output/060_stats/{region}.fq.gz',
         # fq_toss = 'output/060_stats/{region}_toss.fq.gz',
         hist = 'output/060_stats/{region}_hist.txt',
-        hist_out = 'output/060_stats/{region}_hist-out.txt',
+        # hist_out = 'output/060_stats/{region}_hist-out.txt',
         peaks = 'output/060_stats/{region}_peaks.txt'
     log:
         'output/logs/norm.{region}.log'
@@ -233,13 +233,12 @@ rule norm:
         'bbnorm.sh '
         'in={input.fq} '
         'threads={threads} '
-        'out=/dev/null.fastq '
-        # 'outt={output.fq_toss} '
         'hist={output.hist} '
-        'histout={output.hist_out} '
+        # 'histout={output.hist_out} '
         'target={params.target} '
         'min={params.min} '
         'peaks={output.peaks} '
+        'out=null '
         '2> {log} '
 
 
